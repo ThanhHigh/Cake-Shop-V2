@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  cake-shop-app:
+    build: .
+    container_name: cake-shop-app
+    ports:
+      - "8080:80"
+    environment:
+      - DB_HOST=cake-shop-db
+      - DB_PORT=3306
+      - DB_USER=cake_shop
+      - DB_PASSWORD=securepassword
+      - DB_NAME=cake_shop_v2
+      - APP_MODE=vulnerable
+      - APP_DEBUG=true
+      - APP_URL=http://localhost:8080
+      - VULN_SQL_INJECTION=true
+      - VULN_ACCESS_CONTROL=true
+      - VULN_WEAK_AUTH=true
+      - VULN_INSECURE_UPLOAD=true
+      - VULN_MISCONFIGURATION=true
+      - VULN_BROKEN_AUTH=true
+      - VULN_SESSION_ISSUES=true
+      - VULN_INTEGRITY_FAILURES=true
+    volumes:
+      - ./config:/var/www/html/config
+      - ./src:/var/www/html/src
+      - ./public/index.php:/var/www/html/public/index.php
+      - ./public/pages:/var/www/html/public/pages
+      - ./public/uploads:/var/www/html/public/uploads
+      - ./logs:/var/www/html/logs
+    depends_on:
+      - cake-shop-db
+    networks:
+      - cake-shop-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  cake-shop-db:
+    image: mysql:5.7
+    container_name: cake-shop-db
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: cake_shop_v2
+      MYSQL_USER: cake_shop
+      MYSQL_PASSWORD: securepassword
+    volumes:
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+      - cake-shop-db-data:/var/lib/mysql
+    networks:
+      - cake-shop-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  cake-shop-network:
+    driver: bridge
+
+volumes:
+  cake-shop-db-data:

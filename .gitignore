@@ -1,0 +1,44 @@
+# .gitignore
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Dependencies
+vendor/
+node_modules/
+composer.lock
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Build/Logs
+logs/
+*.log
+
+# Database
+*.sql.bak
+
+# Uploads
+public/uploads/*
+!public/uploads/.gitkeep
+
+# Temporary
+tmp/
+tmp/ubuntu18-manual-deploy-guide.md
+temp/
+cache/
+
+# Test coverage
+coverage/
+.phpunit.result.cache
+
+# OS specific
+.DS_Store
+Thumbs.db
