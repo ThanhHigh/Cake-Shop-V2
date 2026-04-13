@@ -23,8 +23,8 @@ class ReviewService
     public function addReview($productId, $userId, $rating, $title, $comment)
     {
         try {
-            $sql = "INSERT INTO reviews (product_id, user_id, rating, title, content) 
-                    VALUES (?, ?, ?, ?, ?)";
+            $sql = "INSERT INTO reviews (product_id, user_id, rating, title, content, is_approved) 
+                    VALUES (?, ?, ?, ?, ?, TRUE)";
             
             $this->db->execute($sql, [$productId, $userId, $rating, $title, $comment]);
             

@@ -607,10 +607,10 @@ $avgRating = $reviewService->getAverageRating($productId);
                         <?php endfor; ?>
                     </div>
                     <h4 style="margin-bottom: 8px; font-size: 14px; color: #333;">
-                        <?php echo htmlspecialchars($review['title']); ?>
+                        <p><?php echo $review['title']; ?></p>
                     </h4>
                     <div class="review-text">
-                        <?php echo htmlspecialchars($review['comment']); ?>
+                        <p><?php echo $review['comment']; ?></p>
                     </div>
                 </div>
                 <?php endforeach; ?>
