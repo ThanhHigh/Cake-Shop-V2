@@ -99,9 +99,7 @@ class ProductService
                     FROM products p
                     LEFT JOIN categories c ON p.category_id = c.id
                     WHERE p.is_active = TRUE 
-                    AND (p.name LIKE '%{$searchTerm}%' OR p.description LIKE '%{$searchTerm}%')
-                    ORDER BY p.name ASC
-                    LIMIT {$limit} OFFSET {$offset}";
+                    AND (p.name LIKE '%{$searchTerm}%' OR p.description LIKE '%{$searchTerm}%') ORDER BY p.name ASC LIMIT {$limit} OFFSET {$offset}";
             
             return $this->db->getConnection()->query($sql)->fetchAll(\PDO::FETCH_ASSOC);
         } else {

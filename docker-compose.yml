@@ -5,7 +5,7 @@ services:
     build: .
     container_name: cake-shop-app
     ports:
-      - "8080:80"
+      - "8085:80"
     environment:
       - DB_HOST=cake-shop-db
       - DB_PORT=3306
@@ -14,7 +14,7 @@ services:
       - DB_NAME=cake_shop_v2
       - APP_MODE=vulnerable
       - APP_DEBUG=true
-      - APP_URL=http://localhost:8080
+      - APP_URL=http://localhost:8085
       - VULN_SQL_INJECTION=true
       - VULN_ACCESS_CONTROL=true
       - VULN_WEAK_AUTH=true
