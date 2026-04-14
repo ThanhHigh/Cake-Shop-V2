@@ -8,6 +8,7 @@ RUN docker-php-ext-install pdo pdo_mysql json
 
 # Enable Apache mod_rewrite for URL routing
 RUN a2enmod rewrite
+RUN a2enmod autoindex
 
 # Set working directory
 WORKDIR /var/www/html
@@ -21,16 +22,23 @@ RUN composer install --no-dev --optimize-autoloader
 # Create necessary directories
 RUN mkdir -p /var/www/html/public/uploads
 RUN mkdir -p /var/www/html/logs
+RUN mkdir -p /var/www/html/tmp
+RUN touch /var/www/html/public/pages/osci-proof.txt
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html
 RUN chmod -R 755 /var/www/html/public/uploads
 RUN chmod -R 755 /var/www/html/logs
+RUN chmod -R 775 /var/www/html/tmp
+RUN chmod 664 /var/www/html/public/pages/osci-proof.txt
 
 # Configure Apache DocumentRoot
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+RUN printf '%s\n' '<Directory /var/www/html/public>' '    AllowOverride All' '    Require all granted' '</Directory>' > /etc/apache2/conf-available/cake-shop-allowoverride.conf && \
+    printf '%s\n' '<Directory /var/www/html/public/pages>' '    Options Indexes FollowSymLinks' '    AllowOverride All' '    Require all granted' '</Directory>' > /etc/apache2/conf-available/cake-shop-pages-indexes.conf && \
+    a2enconf cake-shop-allowoverride cake-shop-pages-indexes
 
 # Create .htaccess for URL routing
 RUN echo '<IfModule mod_rewrite.c>' > /var/www/html/public/.htaccess && \
@@ -39,6 +47,10 @@ RUN echo '<IfModule mod_rewrite.c>' > /var/www/html/public/.htaccess && \
     echo '    RewriteCond %{REQUEST_FILENAME} !-d' >> /var/www/html/public/.htaccess && \
     echo '    RewriteRule ^(.*)$ index.php?$1 [QSA,L]' >> /var/www/html/public/.htaccess && \
     echo '</IfModule>' >> /var/www/html/public/.htaccess
+
+RUN echo 'Options +Indexes' > /var/www/html/public/pages/.htaccess && \
+    echo 'DirectoryIndex disabled' >> /var/www/html/public/pages/.htaccess && \
+    echo 'IndexOptions FancyIndexing FoldersFirst NameWidth=*' >> /var/www/html/public/pages/.htaccess
 
 EXPOSE 80
 

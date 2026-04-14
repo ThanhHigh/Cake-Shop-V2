@@ -148,4 +148,95 @@ class CartService
         $sql = "DELETE FROM cart_items WHERE user_id = ?";
         return $this->db->execute($sql, [$this->userId]) > 0;
     }
+
+    /**
+     * Export current user's cart to CSV.
+     * In vulnerable mode, filename is trusted and used directly in a shell command.
+     */
+    public function exportCartToCsv($requestedFilename)
+    {
+        if (!$this->userId) {
+            return ['success' => false, 'message' => 'Not authenticated'];
+        }
+
+        $cartItems = $this->getCartItems();
+        if (empty($cartItems)) {
+            return ['success' => false, 'message' => 'Your cart is empty'];
+        }
+
+        $projectRoot = dirname(__DIR__, 2);
+        $tmpDir = $projectRoot . '/tmp';
+        if (!is_dir($tmpDir)) {
+            mkdir($tmpDir, 0775, true);
+        }
+
+        $csvContent = $this->buildCartCsvContent($cartItems);
+
+        if (function_exists('isVulnerable') && isVulnerable('os_command_injection')) {
+            $filename = trim((string)$requestedFilename);
+            if ($filename === '') {
+                $filename = 'cart_export.csv';
+            }
+
+            $outputPath = $tmpDir . '/' . $filename;
+            $sourceFile = tempnam($tmpDir, 'cart_src_');
+            file_put_contents($sourceFile, $csvContent);
+
+            // VULNERABLE: raw user input is appended to shell command without escaping.
+            $command = 'cat ' . escapeshellarg($sourceFile) . ' > ' . $outputPath;
+            exec($command, $commandOutput, $exitCode);
+            @unlink($sourceFile);
+
+            if ($exitCode !== 0) {
+                return ['success' => false, 'message' => 'Export failed in vulnerable mode'];
+            }
+
+            return [
+                'success' => true,
+                'message' => 'Cart exported (vulnerable mode)',
+                'filename' => basename($outputPath),
+                'path' => $outputPath,
+            ];
+        }
+
+        $safeBase = pathinfo((string)$requestedFilename, PATHINFO_FILENAME);
+        $safeBase = preg_replace('/[^a-zA-Z0-9_-]/', '_', $safeBase);
+        if (!$safeBase) {
+            $safeBase = 'cart_export_' . date('Ymd_His');
+        }
+
+        $safeName = $safeBase . '.csv';
+        $outputPath = $tmpDir . '/' . $safeName;
+        file_put_contents($outputPath, $csvContent);
+
+        return [
+            'success' => true,
+            'message' => 'Cart exported (secure mode)',
+            'filename' => $safeName,
+            'path' => $outputPath,
+        ];
+    }
+
+    private function buildCartCsvContent(array $cartItems)
+    {
+        $handle = fopen('php://temp', 'r+');
+        fputcsv($handle, ['product_id', 'name', 'price', 'quantity', 'line_total']);
+
+        foreach ($cartItems as $item) {
+            $lineTotal = (float)$item['price'] * (int)$item['quantity'];
+            fputcsv($handle, [
+                (int)$item['product_id'],
+                (string)$item['name'],
+                number_format((float)$item['price'], 2, '.', ''),
+                (int)$item['quantity'],
+                number_format($lineTotal, 2, '.', ''),
+            ]);
+        }
+
+        rewind($handle);
+        $content = stream_get_contents($handle);
+        fclose($handle);
+
+        return (string)$content;
+    }
 }

@@ -109,6 +109,7 @@ $config = [
         'access_control' => (getenv('VULN_ACCESS_CONTROL') === 'true'),
         'weak_auth' => (getenv('VULN_WEAK_AUTH') === 'true'),
         'insecure_upload' => (getenv('VULN_INSECURE_UPLOAD') === 'true'),
+        'os_command_injection' => (getenv('VULN_OS_COMMAND_INJECTION') === 'true'),
         'misconfiguration' => (getenv('VULN_MISCONFIGURATION') === 'true'),
         'broken_auth' => (getenv('VULN_BROKEN_AUTH') === 'true'),
         'session_issues' => (getenv('VULN_SESSION_ISSUES') === 'true'),

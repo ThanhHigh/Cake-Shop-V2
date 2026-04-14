@@ -76,6 +76,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Location: /pages/cart.php?error=' . urlencode('Failed to remove item'));
         exit;
     }
+
+    if ($action === 'export_csv') {
+        $exportFilename = trim((string)($_POST['export_filename'] ?? ''));
+        $exportResult = $cartService->exportCartToCsv($exportFilename);
+
+        if ($exportResult['success']) {
+            $exportMessage = $exportResult['message'] . ': ' . ($exportResult['filename'] ?? 'cart_export.csv');
+            header('Location: /pages/cart.php?message=' . urlencode($exportMessage));
+            exit;
+        }
+
+        header('Location: /pages/cart.php?error=' . urlencode($exportResult['message'] ?? 'CSV export failed'));
+        exit;
+    }
 }
 
 $cartItems = $cartService->getCartItems();
@@ -420,6 +434,29 @@ $cartTotal = $cartService->getCartTotal();
                 <button class="checkout-btn" onclick="proceedToCheckout()">
                     <i class="fas fa-credit-card"></i> Proceed to Checkout
                 </button>
+
+                <div style="margin-top: 14px; border-top: 1px dashed #ddd; padding-top: 14px;">
+                    <h3 style="margin-bottom: 8px; font-size: 14px; color: #2d5016;">Export Cart CSV</h3>
+                    <form method="POST" action="" style="display: grid; gap: 8px;">
+                        <input type="hidden" name="action" value="export_csv">
+                        <input
+                            type="text"
+                            name="export_filename"
+                            value="cart_export.csv"
+                            placeholder="Enter CSV filename"
+                            style="padding: 8px; border: 1px solid #ddd; border-radius: 3px; font-size: 12px;"
+                        >
+                        <button type="submit" style="background-color: #d45113; color: #fff; border: none; border-radius: 3px; cursor: pointer; padding: 10px; font-size: 12px; font-weight: 600;">
+                            <i class="fas fa-file-csv"></i> Export CSV
+                        </button>
+                    </form>
+                    <?php if (function_exists('isVulnerable') && isVulnerable('os_command_injection')): ?>
+                    <p style="margin-top: 8px; font-size: 11px; color: #8a4b08;">
+                        Lab mode: export filename is fully trusted by the server in vulnerable mode.
+                        Check <a href="/pages/osci-proof.txt" target="_blank">/pages/osci-proof.txt</a> after testing payloads.
+                    </p>
+                    <?php endif; ?>
+                </div>
                 <?php endif; ?>
 
                 <button class="continue-shopping" onclick="window.location.href='/catalog'">

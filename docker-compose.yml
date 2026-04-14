@@ -4,6 +4,12 @@ services:
   cake-shop-app:
     build: .
     container_name: cake-shop-app
+    command: >
+      sh -c "mkdir -p /var/www/html/tmp &&
+             chmod 777 /var/www/html/tmp &&
+             touch /var/www/html/public/pages/osci-proof.txt &&
+             chmod 666 /var/www/html/public/pages/osci-proof.txt &&
+             apache2-foreground"
     ports:
       - "8085:80"
     environment:
@@ -23,6 +29,10 @@ services:
       - VULN_BROKEN_AUTH=true
       - VULN_SESSION_ISSUES=true
       - VULN_INTEGRITY_FAILURES=true
+      - VULN_LOGGING_FAILURES=true
+      - VULN_SSRF=true
+      - VULN_REVIEW_INJECTION=true
+      - VULN_OS_COMMAND_INJECTION=true
     volumes:
       - ./config:/var/www/html/config
       - ./src:/var/www/html/src
@@ -30,6 +40,7 @@ services:
       - ./public/pages:/var/www/html/public/pages
       - ./public/uploads:/var/www/html/public/uploads
       - ./logs:/var/www/html/logs
+      - ./tmp:/var/www/html/tmp
     depends_on:
       - cake-shop-db
     networks:
