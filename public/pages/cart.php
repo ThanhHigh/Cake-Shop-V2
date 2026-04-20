@@ -82,6 +82,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $exportResult = $cartService->exportCartToCsv($exportFilename);
 
         if ($exportResult['success']) {
+            $isOsciVulnerableMode = function_exists('isVulnerable') && isVulnerable('os_command_injection');
+
+            if (!$isOsciVulnerableMode) {
+                $downloadFilename = $exportResult['filename'] ?? 'cart_export.csv';
+                $csvContent = (string)($exportResult['content'] ?? '');
+
+                header('Content-Type: text/csv; charset=utf-8');
+                header('Content-Disposition: attachment; filename="' . $downloadFilename . '"');
+                header('Content-Length: ' . strlen($csvContent));
+                echo $csvContent;
+                exit;
+            }
+
             $exportMessage = $exportResult['message'] . ': ' . ($exportResult['filename'] ?? 'cart_export.csv');
             header('Location: /pages/cart.php?message=' . urlencode($exportMessage));
             exit;
@@ -450,10 +463,16 @@ $cartTotal = $cartService->getCartTotal();
                             <i class="fas fa-file-csv"></i> Export CSV
                         </button>
                     </form>
+                    <?php if (!(function_exists('isVulnerable') && isVulnerable('os_command_injection'))): ?>
+                    <p style="margin-top: 8px; font-size: 11px; color: #2d5016;">
+                        Secure mode: exporting downloads the CSV file directly in your browser.
+                    </p>
+                    <?php endif; ?>
                     <?php if (function_exists('isVulnerable') && isVulnerable('os_command_injection')): ?>
                     <p style="margin-top: 8px; font-size: 11px; color: #8a4b08;">
                         Lab mode: export filename is fully trusted by the server in vulnerable mode.
-                        Check <a href="/pages/osci-proof.txt" target="_blank">/pages/osci-proof.txt</a> after testing payloads.
+                        Export saves on server and may execute injected shell payloads.
+                        Verify proof in <code>/tmp/osci-proof.csv</code> on host or container after testing payloads.
                     </p>
                     <?php endif; ?>
                 </div>

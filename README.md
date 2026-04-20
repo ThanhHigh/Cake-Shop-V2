@@ -4,6 +4,8 @@ A deliberately vulnerable PHP + MySQL e-commerce system designed for cybersecuri
 
 ## 🚀 Quick Start
 
+Vulnerable mode learner guide: [docs/VULNERABLE_MODE_README.md](docs/VULNERABLE_MODE_README.md)
+
 ### Prerequisites
 - PHP 7.4+
 - MySQL 5.7+
@@ -97,33 +99,36 @@ Switch modes by changing `APP_MODE` in `.env` and restarting the server.
 
 | # | Vulnerability | Feature | Link |
 |---|---|---|---|
-| 1 | Broken Access Control | Admin, Orders | [Learner Guide](docs/vulnerabilities/01-broken-access-control.md) |
-| 2 | Cryptographic Failures | Auth, Login | [Learner Guide](docs/vulnerabilities/02-cryptographic-failures.md) |
-| 3 | Injection (SQLi) | Search, Login, Filters | [Learner Guide](docs/vulnerabilities/03-injection-sqli.md) |
-| 4 | Insecure Design | File Upload | [Learner Guide](docs/vulnerabilities/04-insecure-design.md) |
-| 5 | Security Misconfiguration | Config, Errors | [Learner Guide](docs/vulnerabilities/05-misconfiguration.md) |
-| 6 | Vulnerable/Outdated Components | Dependencies | [Learner Guide](docs/vulnerabilities/06-vulnerable-components.md) |
-| 7 | Auth Failures | Session, Login | [Learner Guide](docs/vulnerabilities/07-auth-failures.md) |
-| 8 | Integrity Failures | Data Updates | [Learner Guide](docs/vulnerabilities/08-integrity-failures.md) |
-| 9 | Logging & Monitoring Failures | Audit Logs | [Learner Guide](docs/vulnerabilities/09-logging-failures.md) |
-| 10 | SSRF / Request Abuse | URL Fetching | [Learner Guide](docs/vulnerabilities/10-ssrf.md) |
+| 1 | Broken Access Control | Admin, Orders | [Vulnerable Mode Guide](docs/VULNERABLE_MODE_README.md) |
+| 2 | Cryptographic Failures | Auth, Login | [Vulnerable Mode Guide](docs/VULNERABLE_MODE_README.md) |
+| 3 | Injection (SQLi) | Search, Login, Filters | [Vulnerable Mode Guide](docs/VULNERABLE_MODE_README.md) |
+| 4 | Insecure Design | File Upload | [Vulnerable Mode Guide](docs/VULNERABLE_MODE_README.md) |
+| 5 | Security Misconfiguration | Config, Errors | [Vulnerable Mode Guide](docs/VULNERABLE_MODE_README.md) |
+| 6 | Vulnerable/Outdated Components | Dependencies | [Vulnerable Mode Guide](docs/VULNERABLE_MODE_README.md) |
+| 7 | Auth Failures | Session, Login | [Vulnerable Mode Guide](docs/VULNERABLE_MODE_README.md) |
+| 8 | Integrity Failures | Data Updates | [Vulnerable Mode Guide](docs/VULNERABLE_MODE_README.md) |
+| 9 | Logging & Monitoring Failures | Audit Logs | [Vulnerable Mode Guide](docs/VULNERABLE_MODE_README.md) |
+| 10 | SSRF / Request Abuse | URL Fetching | [Vulnerable Mode Guide](docs/VULNERABLE_MODE_README.md) |
+
+Training extension included:
+- OS command injection (CWE-78) via cart CSV filename handling, documented in [docs/VULNERABLE_MODE_README.md](docs/VULNERABLE_MODE_README.md)
 
 ## 📚 Learning Path
 
 ### Beginner Exercises
-1. [Access Control Bypass](docs/exercises/01-broken-access-control.md)
-2. [SQL Injection Basics](docs/exercises/03-sql-injection.md)
-3. [Weak Authentication](docs/exercises/07-auth-failures.md)
+1. [Vulnerable Mode Guide](docs/VULNERABLE_MODE_README.md)
+2. [Phase 2 Quickstart](docs/PHASE2_QUICKSTART.md)
+3. [Phase 2 Architecture](docs/PHASE2.md)
 
 ### Intermediate Exercises
-1. [Chained Vulnerabilities](docs/exercises/chained-attacks.md)
-2. [File Upload Abuse](docs/exercises/04-insecure-design.md)
-3. [Session Hijacking](docs/exercises/07-session-security.md)
+1. [Vulnerable Mode Guide](docs/VULNERABLE_MODE_README.md)
+2. [Phase 3 Checklist](docs/PHASE3_CHECKLIST.md)
+3. [Manual VM Deployment Guide](tmp/ubuntu18-manual-deploy-guide.md)
 
 ### Fix-Focused Exercises
-1. [Authorization Hardening](docs/exercises/fix-01-authz.md)
-2. [Input Validation](docs/exercises/fix-03-input-validation.md)
-3. [Secure Session Management](docs/exercises/fix-07-sessions.md)
+1. Set APP_MODE=secure and rerun the same tests from [docs/VULNERABLE_MODE_README.md](docs/VULNERABLE_MODE_README.md)
+2. Compare implementation details in [docs/PHASE2.md](docs/PHASE2.md)
+3. Track progress against [docs/PHASE2_CHECKLIST.md](docs/PHASE2_CHECKLIST.md)
 
 ## ⚙️ Default Credentials
 
@@ -184,7 +189,7 @@ MIT License - See LICENSE file for details
 For issues, questions, or improvements, refer to:
 - Project plan: [plan.md](.github/plan.md)
 - Developer docs: [docs/](docs/)
-- Learner guides: [docs/vulnerabilities/](docs/vulnerabilities/)
+- Learner guide: [docs/VULNERABLE_MODE_README.md](docs/VULNERABLE_MODE_README.md)
 
 ---
 

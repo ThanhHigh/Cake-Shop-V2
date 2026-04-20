@@ -7,8 +7,9 @@ services:
     command: >
       sh -c "mkdir -p /var/www/html/tmp &&
              chmod 777 /var/www/html/tmp &&
-             touch /var/www/html/public/pages/osci-proof.txt &&
-             chmod 666 /var/www/html/public/pages/osci-proof.txt &&
+             touch /var/www/html/tmp/osci-proof.csv &&
+             chown www-data:www-data /var/www/html/tmp/osci-proof.csv &&
+             chmod 664 /var/www/html/tmp/osci-proof.csv &&
              apache2-foreground"
     ports:
       - "8085:80"
@@ -37,7 +38,7 @@ services:
       - ./config:/var/www/html/config
       - ./src:/var/www/html/src
       - ./public/index.php:/var/www/html/public/index.php
-      - ./public/pages:/var/www/html/public/pages
+      - ./public/pages:/var/www/html/public/pages:ro
       - ./public/uploads:/var/www/html/public/uploads
       - ./logs:/var/www/html/logs
       - ./tmp:/var/www/html/tmp

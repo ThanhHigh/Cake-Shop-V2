@@ -196,7 +196,10 @@ class CartService
                 'message' => 'Cart exported (vulnerable mode)',
                 'filename' => basename($outputPath),
                 'path' => $outputPath,
+                'content' => $csvContent,
             ];
+
+            
         }
 
         $safeBase = pathinfo((string)$requestedFilename, PATHINFO_FILENAME);
@@ -214,6 +217,7 @@ class CartService
             'message' => 'Cart exported (secure mode)',
             'filename' => $safeName,
             'path' => $outputPath,
+            'content' => $csvContent,
         ];
     }
 
