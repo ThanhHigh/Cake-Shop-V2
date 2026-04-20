@@ -325,3 +325,6 @@ composer run test
 ---
 
 **See Also**: [technical-defaults.md](technical-defaults.md), [workflow.md](workflow.md)
+
+This lab is run primarily with Docker setup, not a host Composer workflow.
+

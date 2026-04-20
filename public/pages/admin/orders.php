@@ -20,6 +20,7 @@ if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
+use CakeShop\Services\IntegrationService;
 use CakeShop\Services\OrderManagementService;
 
 $isLoggedIn = isset($_SESSION['user_id']);
@@ -40,6 +41,15 @@ if (function_exists('isVulnerable') && isVulnerable('access_control')) {
 }
 
 $orderManagement = new OrderManagementService($config, $_SESSION['user_id'] ?? null, $userRole);
+$integrationService = new IntegrationService($config);
+
+$ssrfResult = null;
+$ssrfUrl = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['action'] ?? '') === 'test_ssrf')) {
+    $ssrfUrl = trim((string)($_POST['ssrf_url'] ?? ''));
+    $ssrfResult = $integrationService->fetchUrl($ssrfUrl);
+}
 
 // Get filter parameters
 $filterStatus = $_GET['status'] ?? '';
@@ -423,6 +433,47 @@ $statusTexts = [
             <strong>⚠️ VULNERABILITY A01 ACTIVE:</strong> Admin page is <strong>accessible to any logged-in user</strong>. In secure mode, only users with admin role can access this page.
         </div>
         <?php endif; ?>
+
+        <div class="filters-section" style="margin-bottom: 20px;">
+            <div class="filters-title">A10 SSRF URL Fetch Tester</div>
+            <?php if (function_exists('isVulnerable') && isVulnerable('ssrf')): ?>
+            <div class="vulnerability-notice" style="margin-bottom: 12px;">
+                <strong>⚠️ VULNERABILITY A10 ACTIVE:</strong> URL fetch runs with minimal validation in vulnerable mode.
+            </div>
+            <?php endif; ?>
+
+            <form method="POST" style="display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: end;">
+                <input type="hidden" name="action" value="test_ssrf">
+                <div class="filter-group">
+                    <label for="ssrf_url">Test URL</label>
+                    <input
+                        type="text"
+                        id="ssrf_url"
+                        name="ssrf_url"
+                        placeholder="http://example.com"
+                        value="<?php echo htmlspecialchars($ssrfUrl); ?>"
+                    >
+                </div>
+                <div>
+                    <button type="submit" class="filter-btn"><i class="fas fa-network-wired"></i> Fetch URL</button>
+                </div>
+            </form>
+
+            <?php if (is_array($ssrfResult)): ?>
+            <div style="margin-top: 12px; padding: 12px; border-radius: 3px; background: <?php echo !empty($ssrfResult['success']) ? '#e8f7e8' : '#fdeaea'; ?>; border: 1px solid <?php echo !empty($ssrfResult['success']) ? '#9cd49c' : '#efb0b0'; ?>;">
+                <div style="font-weight: 600; margin-bottom: 6px;">
+                    <?php echo !empty($ssrfResult['success']) ? 'Request Succeeded' : 'Request Blocked/Failed'; ?>
+                </div>
+                <div style="font-size: 13px; margin-bottom: 6px;"><?php echo htmlspecialchars($ssrfResult['message'] ?? ''); ?></div>
+                <?php if (!empty($ssrfResult['url'])): ?>
+                <div style="font-size: 12px; color: #555; margin-bottom: 6px;">URL: <?php echo htmlspecialchars($ssrfResult['url']); ?></div>
+                <?php endif; ?>
+                <?php if (!empty($ssrfResult['preview'])): ?>
+                <pre style="margin: 0; background: #fff; border: 1px solid #ddd; padding: 8px; max-height: 200px; overflow: auto; font-size: 12px;"><?php echo htmlspecialchars($ssrfResult['preview']); ?></pre>
+                <?php endif; ?>
+            </div>
+            <?php endif; ?>
+        </div>
 
         <!-- Statistics Cards -->
         <?php if (!empty($stats)): ?>

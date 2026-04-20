@@ -21,6 +21,7 @@ if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
+use CakeShop\Services\ImageUploadService;
 use CakeShop\Services\OrderManagementService;
 
 $isLoggedIn = isset($_SESSION['user_id']);
@@ -45,6 +46,7 @@ if (!$orderId) {
 }
 
 $orderManagement = new OrderManagementService($config, $_SESSION['user_id'] ?? null, $userRole);
+$uploadService = new ImageUploadService($config);
 $order = $orderManagement->getOrderWithAccessCheck($orderId);
 
 if (!$order) {
@@ -76,104 +78,20 @@ $invoiceFile = null;
 $invoiceError = null;
 
 if (!empty($_FILES['invoice'])) {
-    $file = $_FILES['invoice'];
-    
-    if ($file['error'] === UPLOAD_ERR_OK) {
-        // VULNERABILITY A04: File upload handling (vulnerable vs secure)
-        if (isVulnerable('insecure_upload')) {
-            // Vulnerable path: Accept any file type, save with original name
-            $filename = $file['name'];
-            $uploadDir = dirname(dirname(__DIR__)) . '/uploads/';
-            
-            if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0755, true);
-            }
+    // VULNERABILITY A04: File upload handling (delegated to ImageUploadService)
+    $uploadResult = $uploadService->uploadFile($_FILES['invoice']);
 
-            $uploadPath = $uploadDir . $filename;
-            
-            if (move_uploaded_file($file['tmp_name'], $uploadPath)) {
-                $invoiceFile = $filename;
-            } else {
-                $invoiceError = 'Failed to upload file';
-            }
-        } else {
-            // SECURE: Validate file type and rename
-            $allowedExtensions = ['pdf', 'jpg', 'jpeg', 'png'];
-            $fileExt = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-            
-            // Check MIME type
-            $finfo = finfo_open(FILEINFO_MIME_TYPE);
-            $mimeType = finfo_file($finfo, $file['tmp_name']);
-            finfo_close($finfo);
-            
-            $allowedMimes = ['application/pdf', 'image/jpeg', 'image/png'];
-            
-            if (!in_array($fileExt, $allowedExtensions) || !in_array($mimeType, $allowedMimes)) {
-                $invoiceError = 'Invalid file type. Only PDF, JPG, and PNG files are allowed.';
-            } else {
-                // Rename file with hash
-                $hash = hash('sha256', uniqid() . time());
-                $newFilename = $hash . '.' . $fileExt;
-                $uploadDir = dirname(dirname(__DIR__)) . '/uploads/';
-                
-                if (!is_dir($uploadDir)) {
-                    mkdir($uploadDir, 0755, true);
-                }
-
-                $uploadPath = $uploadDir . $newFilename;
-                
-                if (move_uploaded_file($file['tmp_name'], $uploadPath)) {
-                    $invoiceFile = $newFilename;
-                } else {
-                    $invoiceError = 'Failed to upload file';
-                }
-            }
-        }
+    if (!empty($uploadResult['success'])) {
+        $invoiceFile = $uploadResult['filename'] ?? null;
+    } else {
+        $invoiceError = $uploadResult['message'] ?? 'Failed to upload file';
     }
 }
 
 // Handle file download (A04: Insecure Design)
 if (!empty($_GET['download'])) {
     $fileToDownload = $_GET['download'];
-    
-    if (isVulnerable('insecure_upload')) {
-        // VULNERABLE: Serve file without type checking
-        // Risk: Could expose system files if path traversal is used
-        $uploadDir = dirname(dirname(__DIR__)) . '/uploads/';
-        $filePath = $uploadDir . $fileToDownload;
-        
-        // Weak check - can be bypassed with path traversal
-        if (file_exists($filePath)) {
-            header('Content-Type: application/octet-stream');
-            header('Content-Disposition: attachment; filename=' . basename($filePath));
-            readfile($filePath);
-            exit;
-        }
-    } else {
-        // SECURE: Validate file exists and is in upload directory
-        $uploadDir = dirname(dirname(__DIR__)) . '/uploads/';
-        $filePath = realpath($uploadDir . $fileToDownload);
-        
-        // Verify the file is actually in the upload directory (prevent path traversal)
-        if ($filePath && strpos($filePath, realpath($uploadDir)) === 0 && file_exists($filePath)) {
-            // Validate MIME type
-            $finfo = finfo_open(FILEINFO_MIME_TYPE);
-            $mimeType = finfo_file($finfo, $filePath);
-            finfo_close($finfo);
-            
-            $allowedMimes = ['application/pdf', 'image/jpeg', 'image/png'];
-            
-            if (in_array($mimeType, $allowedMimes)) {
-                header('Content-Type: ' . $mimeType);
-                header('Content-Disposition: attachment; filename=' . basename($filePath));
-                readfile($filePath);
-                exit;
-            }
-        }
-    }
-    
-    http_response_code(404);
-    die('File not found');
+    $uploadService->downloadFile($fileToDownload);
 }
 
 // Map status to badge colors

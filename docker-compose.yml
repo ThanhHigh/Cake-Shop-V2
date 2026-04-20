@@ -5,7 +5,10 @@ services:
     build: .
     container_name: cake-shop-app
     command: >
-      sh -c "mkdir -p /var/www/html/tmp &&
+          sh -c "mkdir -p /var/www/html/public/uploads &&
+            chown -R www-data:www-data /var/www/html/public/uploads &&
+            chmod -R 775 /var/www/html/public/uploads &&
+            mkdir -p /var/www/html/tmp &&
              chmod 777 /var/www/html/tmp &&
              touch /var/www/html/tmp/osci-proof.csv &&
              chown www-data:www-data /var/www/html/tmp/osci-proof.csv &&

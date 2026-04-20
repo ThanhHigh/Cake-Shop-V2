@@ -21,6 +21,7 @@ if (session_status() == PHP_SESSION_NONE) {
 }
 
 use CakeShop\Services\CartService;
+use CakeShop\Services\ImageUploadService;
 use CakeShop\Services\OrderService;
 
 $isLoggedIn = isset($_SESSION['user_id']);
@@ -32,6 +33,7 @@ if (!$isLoggedIn) {
 }
 
 $cartService = new CartService($config, $_SESSION['user_id']);
+$uploadService = new ImageUploadService($config);
 $orderService = new OrderService($config, $_SESSION['user_id']);
 
 $cartItems = $cartService->getCartItems();
@@ -85,60 +87,13 @@ $invoiceFile = null;
 $invoiceError = null;
 
 if (!empty($_FILES['invoice'])) {
-    // VULNERABILITY A04: File upload handling (vulnerable vs secure)
-    $file = $_FILES['invoice'];
-    
-    if ($file['error'] === UPLOAD_ERR_OK) {
-        // VULNERABLE: No file type validation
-        if (isVulnerable('insecure_upload')) {
-            // Vulnerable path: Accept any file type, save with original name
-            $filename = $file['name'];
-            $uploadDir = dirname(__DIR__) . '/uploads/';
-            
-            if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0755, true);
-            }
+    // VULNERABILITY A04: File upload handling (delegated to ImageUploadService)
+    $uploadResult = $uploadService->uploadFile($_FILES['invoice']);
 
-            $uploadPath = $uploadDir . $filename;
-            
-            if (move_uploaded_file($file['tmp_name'], $uploadPath)) {
-                $invoiceFile = $filename;
-            } else {
-                $invoiceError = 'Failed to upload file';
-            }
-        } else {
-            // SECURE: Validate file type and rename
-            $allowedExtensions = ['pdf', 'jpg', 'jpeg', 'png'];
-            $fileExt = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-            
-            // Check MIME type
-            $finfo = finfo_open(FILEINFO_MIME_TYPE);
-            $mimeType = finfo_file($finfo, $file['tmp_name']);
-            finfo_close($finfo);
-            
-            $allowedMimes = ['application/pdf', 'image/jpeg', 'image/png'];
-            
-            if (!in_array($fileExt, $allowedExtensions) || !in_array($mimeType, $allowedMimes)) {
-                $invoiceError = 'Invalid file type. Only PDF, JPG, and PNG files are allowed.';
-            } else {
-                // Rename file with hash to avoid overwrites and path traversal
-                $hash = hash('sha256', uniqid() . time());
-                $newFilename = $hash . '.' . $fileExt;
-                $uploadDir = dirname(__DIR__) . '/uploads/';
-                
-                if (!is_dir($uploadDir)) {
-                    mkdir($uploadDir, 0755, true);
-                }
-
-                $uploadPath = $uploadDir . $newFilename;
-                
-                if (move_uploaded_file($file['tmp_name'], $uploadPath)) {
-                    $invoiceFile = $newFilename;
-                } else {
-                    $invoiceError = 'Failed to upload file';
-                }
-            }
-        }
+    if (!empty($uploadResult['success'])) {
+        $invoiceFile = $uploadResult['filename'] ?? null;
+    } else {
+        $invoiceError = $uploadResult['message'] ?? 'Failed to upload file';
     }
 }
 ?><!DOCTYPE html>

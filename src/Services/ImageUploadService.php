@@ -18,7 +18,7 @@ class ImageUploadService
     public function __construct($config, $uploadDir = null)
     {
         $this->config = $config;
-        
+
         if ($uploadDir === null) {
             $this->uploadDir = dirname(dirname(__DIR__)) . '/public/uploads/';
         } else {
@@ -82,7 +82,7 @@ class ImageUploadService
             
             $uploadPath = $this->uploadDir . $filename;
             
-            if (move_uploaded_file($tmpPath, $uploadPath)) {
+            if ($this->storeUploadedFile($tmpPath, $uploadPath)) {
                 return [
                     'success' => true,
                     'message' => 'File uploaded successfully',
@@ -148,7 +148,7 @@ class ImageUploadService
                 return ['success' => false, 'message' => 'Invalid file path'];
             }
 
-            if (move_uploaded_file($tmpPath, $uploadPath)) {
+            if ($this->storeUploadedFile($tmpPath, $uploadPath)) {
                 return [
                     'success' => true,
                     'message' => 'File uploaded successfully',
@@ -195,19 +195,19 @@ class ImageUploadService
      */
     private function downloadFileVulnerable($filename)
     {
+        if ($this->isTraversalPayload($filename)) {
+            $this->logSecurityEvent('A04_TRAVERSAL_ALLOWED', $filename);
+        }
+
         $filePath = $this->uploadDir . $filename;
         
         // Weak check - can be bypassed with ../ or other tricks
         if (file_exists($filePath) && is_file($filePath)) {
-            header('Content-Type: application/octet-stream');
-            header('Content-Disposition: attachment; filename=' . basename($filePath));
-            header('Content-Length: ' . filesize($filePath));
-            readfile($filePath);
-            exit;
+            $this->sendDownloadResponse($filePath, 'application/octet-stream');
+            return;
         }
         
-        http_response_code(404);
-        die('File not found');
+        $this->sendNotFoundResponse('File not found');
     }
 
     /**
@@ -221,19 +221,23 @@ class ImageUploadService
      */
     private function downloadFileSecure($filename)
     {
+        if ($this->isTraversalPayload($filename)) {
+            $this->logSecurityEvent('A04_TRAVERSAL_BLOCK_ATTEMPT', $filename);
+        }
+
         $filePath = realpath($this->uploadDir . $filename);
         $uploadDir = realpath($this->uploadDir);
         
         // Verify file is in upload directory (prevent path traversal)
         if (!$filePath || strpos($filePath, $uploadDir) !== 0) {
-            http_response_code(404);
-            die('File not found');
+            $this->sendNotFoundResponse('File not found');
+            return;
         }
 
         // Verify file exists and is readable
         if (!file_exists($filePath) || !is_file($filePath) || !is_readable($filePath)) {
-            http_response_code(404);
-            die('File not found');
+            $this->sendNotFoundResponse('File not found');
+            return;
         }
 
         // Validate MIME type
@@ -242,20 +246,11 @@ class ImageUploadService
         finfo_close($finfo);
 
         if (!in_array($mimeType, $this->allowedMimes)) {
-            http_response_code(403);
-            die('File type not allowed');
+            $this->sendForbiddenResponse('File type not allowed');
+            return;
         }
 
-        // Send file
-        header('Content-Type: ' . $mimeType);
-        header('Content-Disposition: attachment; filename=' . basename($filePath));
-        header('Content-Length: ' . filesize($filePath));
-        header('Cache-Control: no-cache, no-store, must-revalidate');
-        header('Pragma: no-cache');
-        header('Expires: 0');
-        
-        readfile($filePath);
-        exit;
+        $this->sendDownloadResponse($filePath, $mimeType);
     }
 
     /**
@@ -320,5 +315,100 @@ class ImageUploadService
         } catch (\Exception $e) {
             return false;
         }
+    }
+
+    /**
+     * Check whether a path is a valid uploaded file.
+     * Kept protected so tests can override the upload-source check.
+     *
+     * @param string $tmpPath
+     * @return bool
+     */
+    protected function isUploadedFile($tmpPath)
+    {
+        return is_uploaded_file($tmpPath);
+    }
+
+    /**
+     * Move the uploaded file to its destination.
+     * Kept protected so tests can substitute a copy-based implementation.
+     *
+     * @param string $tmpPath
+     * @param string $uploadPath
+     * @return bool
+     */
+    protected function storeUploadedFile($tmpPath, $uploadPath)
+    {
+        return move_uploaded_file($tmpPath, $uploadPath);
+    }
+
+    /**
+     * Stream a file response to the client.
+     * Tests may override this to capture the resolved file path and MIME type.
+     *
+     * @param string $filePath
+     * @param string $mimeType
+     * @return void
+     */
+    protected function sendDownloadResponse($filePath, $mimeType)
+    {
+        header('Content-Type: ' . $mimeType);
+        header('Content-Disposition: attachment; filename=' . basename($filePath));
+        header('Content-Length: ' . filesize($filePath));
+        header('Cache-Control: no-cache, no-store, must-revalidate');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        readfile($filePath);
+        exit;
+    }
+
+    /**
+     * Send a not-found response.
+     * Tests may override this to capture status and message without exiting.
+     *
+     * @param string $message
+     * @return void
+     */
+    protected function sendNotFoundResponse($message)
+    {
+        http_response_code(404);
+        die($message);
+    }
+
+    /**
+     * Send a forbidden response.
+     * Tests may override this to capture status and message without exiting.
+     *
+     * @param string $message
+     * @return void
+     */
+    protected function sendForbiddenResponse($message)
+    {
+        http_response_code(403);
+        die($message);
+    }
+
+    /**
+     * Basic traversal payload detection for training instrumentation.
+     *
+     * @param string $filename
+     * @return bool
+     */
+    protected function isTraversalPayload($filename)
+    {
+        return strpos($filename, '../') !== false || strpos($filename, '..\\') !== false;
+    }
+
+    /**
+     * Lightweight security event logging for training visibility.
+     *
+     * @param string $event
+     * @param string $value
+     * @return void
+     */
+    protected function logSecurityEvent($event, $value)
+    {
+        error_log('[SECURITY][' . $event . '] value=' . $value);
     }
 }
