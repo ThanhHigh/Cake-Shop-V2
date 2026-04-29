@@ -29,6 +29,11 @@ class Database
     private function connect()
     {
         $dbConfig = $this->config['db'];
+        /**
+         * dsn - data source name - 
+         * is a string that contains the information required to connect to the database. 
+         * It typically includes the database type, host, port, database name, and character set.
+         */
         $dsn = sprintf(
             'mysql:host=%s;port=%d;dbname=%s;charset=utf8mb4',
             $dbConfig['host'],

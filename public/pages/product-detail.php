@@ -321,6 +321,29 @@ $avgRating = $reviewService->getAverageRating($productId);
             background-color: #b8954f;
         }
 
+        .proof-feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            background-color: #fff;
+            font-size: 12px;
+            color: #333;
+            display: none;
+        }
+
+        .proof-feedback pre {
+            margin-top: 8px;
+            margin-bottom: 0;
+            border: 1px solid #eee;
+            background-color: #fafafa;
+            padding: 8px;
+            max-height: 140px;
+            overflow: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
         .review-item {
             padding: 15px 0;
             border-bottom: 1px solid #eee;
@@ -503,6 +526,14 @@ $avgRating = $reviewService->getAverageRating($productId);
                         <textarea id="comment" name="comment" placeholder="Share your experience..." required></textarea>
                     </div>
 
+                    <div class="form-group">
+                        <label for="proof_url">Proof URL (Optional)</label>
+                        <input type="url" id="proof_url" name="proof_url" placeholder="http://example.com/proof">
+                        <small style="display:block; margin-top:6px; color:#666;">Training field: the server fetches this URL to preview evidence. In vulnerable mode, internal targets may be reachable.</small>
+                    </div>
+
+                    <div id="proofFeedback" class="proof-feedback"></div>
+
                     <button type="submit" id="submitBtn" class="btn-submit">Submit Review</button>
                 </form>
             </div>
@@ -513,11 +544,14 @@ $avgRating = $reviewService->getAverageRating($productId);
                     
                     const messageDiv = document.getElementById('reviewMessage');
                     const submitBtn = document.getElementById('submitBtn');
+                    const proofFeedback = document.getElementById('proofFeedback');
                     
                     // Clear previous messages
                     messageDiv.style.display = 'none';
                     messageDiv.innerHTML = '';
                     messageDiv.className = '';
+                    proofFeedback.style.display = 'none';
+                    proofFeedback.innerHTML = '';
                     
                     // Disable submit button during request
                     submitBtn.disabled = true;
@@ -540,6 +574,20 @@ $avgRating = $reviewService->getAverageRating($productId);
                             messageDiv.style.border = '1px solid';
                             messageDiv.innerHTML = '✓ ' + data.message;
                             messageDiv.style.display = 'block';
+
+                            if (data.proof && data.proof.url) {
+                                let proofHtml = '<strong>Proof URL fetch result:</strong><br>';
+                                proofHtml += 'Status: ' + String(data.proof.status || 'unknown') + '<br>';
+                                if (data.proof.message) {
+                                    proofHtml += 'Message: ' + String(data.proof.message).replace(/</g, '&lt;').replace(/>/g, '&gt;') + '<br>';
+                                }
+                                if (data.proof.preview) {
+                                    proofHtml += '<pre>' + String(data.proof.preview).replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</pre>';
+                                }
+
+                                proofFeedback.innerHTML = proofHtml;
+                                proofFeedback.style.display = 'block';
+                            }
                             
                             // Clear form
                             document.getElementById('reviewForm').reset();
@@ -612,6 +660,20 @@ $avgRating = $reviewService->getAverageRating($productId);
                     <div class="review-text">
                         <p><?php echo $review['comment']; ?></p>
                     </div>
+                    <?php if (!empty($review['proof_url'])): ?>
+                    <div style="margin-top: 10px; font-size: 12px; color: #555; background: #fafafa; border: 1px solid #eee; border-radius: 4px; padding: 8px;">
+                        <p><strong>Proof URL:</strong> <?php echo htmlspecialchars($review['proof_url']); ?></p>
+                        <?php if (!empty($review['proof_fetch_status'])): ?>
+                        <p><strong>Fetch status:</strong> <?php echo htmlspecialchars($review['proof_fetch_status']); ?></p>
+                        <?php endif; ?>
+                        <?php if (!empty($review['proof_fetch_message'])): ?>
+                        <p><strong>Fetch message:</strong> <?php echo htmlspecialchars($review['proof_fetch_message']); ?></p>
+                        <?php endif; ?>
+                        <?php if (!empty($review['proof_preview'])): ?>
+                        <pre style="margin: 8px 0 0 0; background: #fff; border: 1px solid #ddd; padding: 8px; max-height: 140px; overflow: auto; white-space: pre-wrap; word-break: break-word;"><?php echo htmlspecialchars($review['proof_preview']); ?></pre>
+                        <?php endif; ?>
+                    </div>
+                    <?php endif; ?>
                 </div>
                 <?php endforeach; ?>
             </div>

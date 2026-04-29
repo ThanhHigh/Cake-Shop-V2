@@ -86,7 +86,7 @@ class ImageUploadService
                 return [
                     'success' => true,
                     'message' => 'File uploaded successfully',
-                    'filename' => $filename
+                    'filename' => $filename 
                 ];
             } else {
                 return ['success' => false, 'message' => 'Failed to move uploaded file'];
@@ -221,6 +221,7 @@ class ImageUploadService
      */
     private function downloadFileSecure($filename)
     {
+        # Just for log test
         if ($this->isTraversalPayload($filename)) {
             $this->logSecurityEvent('A04_TRAVERSAL_BLOCK_ATTEMPT', $filename);
         }

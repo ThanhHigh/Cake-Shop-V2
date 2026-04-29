@@ -26,6 +26,7 @@
 - **Intentional Vulnerabilities** (VULNERABLE mode)
   - SQL injection in product search
   - Weak password hashing (MD5)
+  - SSRF in review proof URL fetch
   - Information leakage in errors
   
 - **Secure Implementations** (SECURE mode)
@@ -170,6 +171,22 @@ VULNERABLE mode:
 SECURE mode:
 - 5 failed attempts = 1-hour lockout
 - Rate limiting per IP (implement in Phase 3)
+
+#### SSRF (Customer Review Proof URL)
+```text
+Workflow:
+1) Open product detail page
+2) Submit a review with optional Proof URL field
+3) Server fetches the URL and returns visible fetch status + preview
+
+VULNERABLE mode:
+- Internal/private URLs are not blocked by SSRF controls
+
+SECURE mode:
+- Only http/https URLs are allowed
+- localhost/private/reserved targets are blocked
+- Optional allowlist from SSRF_ALLOWED_HOSTS is enforced
+```
 ```
 
 ### Exercises for Learners
@@ -184,12 +201,12 @@ SECURE mode:
 1. Try SQL injection in search (VULNERABLE mode)
 2. Compare search results between modes
 3. Inspect password hashing differences
-4. Review code implementations
+4. Submit review proof URLs and compare SSRF behavior between modes
 
 **Advanced:**
 1. Craft advanced SQL injection payloads
 2. Analyze authentication flow
-3. Test session security
+3. Test SSRF payloads (localhost, private IP range, metadata endpoint format)
 4. Document vulnerability patterns
 
 ---
@@ -255,6 +272,7 @@ Ensure schema has these tables (created in Phase 1):
 - cart_items (user_id, product_id, quantity)
 - orders (user_id, total_amount, status, etc.)
 - reviews (product_id, user_id, rating, comment, etc.)
+  - includes proof_url, proof_fetch_status, proof_fetch_message, proof_preview for SSRF training
 ```
 
 ### Seed Data

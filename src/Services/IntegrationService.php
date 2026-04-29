@@ -129,6 +129,7 @@ class IntegrationService
 
     private function getAllowlistHosts()
     {
+        # Seem like SSRF_ALLOWED_HOSTS is empty now
         $raw = trim((string)(getenv('SSRF_ALLOWED_HOSTS') ?: ''));
         if ($raw === '') {
             return [];

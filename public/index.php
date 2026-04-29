@@ -77,6 +77,7 @@ if ($requestUri === '/' || $requestUri === '/intro') {
         $rating = isset($_POST['rating']) ? (int)$_POST['rating'] : 0;
         $title = isset($_POST['title']) ? trim($_POST['title']) : '';
         $comment = isset($_POST['comment']) ? trim($_POST['comment']) : '';
+        $proofUrl = isset($_POST['proof_url']) ? trim($_POST['proof_url']) : '';
         $userId = $_SESSION['user_id'];
         
         // Validation
@@ -126,13 +127,19 @@ if ($requestUri === '/' || $requestUri === '/intro') {
         // Note: We pass the processed comment to the service
         // In vulnerable mode: unescaped HTML
         // In secure mode: escaped to prevent injection
-        $result = $reviewService->addReview($productId, $userId, $rating, $title, $reviewComment);
+        $result = $reviewService->addReview($productId, $userId, $rating, $title, $reviewComment, $proofUrl);
         
         if ($result['success']) {
             http_response_code(201);
             echo json_encode([
                 'success' => true,
-                'message' => 'Thank you! Your review has been submitted and is pending approval.'
+                'message' => 'Thank you! Your review has been submitted and is pending approval.',
+                'proof' => [
+                    'url' => $result['proof_url'] ?? '',
+                    'status' => $result['proof_fetch_status'] ?? 'not_provided',
+                    'message' => $result['proof_fetch_message'] ?? null,
+                    'preview' => $result['proof_preview'] ?? null,
+                ],
             ]);
         } else {
             http_response_code(400);
