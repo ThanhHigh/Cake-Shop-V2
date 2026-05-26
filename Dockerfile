@@ -29,8 +29,11 @@ RUN chmod 664 /var/www/html/tmp/osci-proof.csv
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+# RUN printf '%s\n' '<Directory /var/www/html/public>' '    AllowOverride All' '    Require all granted' '</Directory>' > /etc/apache2/conf-available/cake-shop-allowoverride.conf && \
+#     printf '%s\n' '<Directory /var/www/html/public/pages>' '    Options -Indexes' '    AllowOverride FileInfo Options' '    Require all granted' '</Directory>' > /etc/apache2/conf-available/cake-shop-pages-indexes.conf && \
+#     a2enconf cake-shop-allowoverride cake-shop-pages-indexes
 RUN printf '%s\n' '<Directory /var/www/html/public>' '    AllowOverride All' '    Require all granted' '</Directory>' > /etc/apache2/conf-available/cake-shop-allowoverride.conf && \
-    printf '%s\n' '<Directory /var/www/html/public/pages>' '    Options -Indexes' '    AllowOverride FileInfo Options' '    Require all granted' '</Directory>' > /etc/apache2/conf-available/cake-shop-pages-indexes.conf && \
+    printf '%s\n' '<Directory /var/www/html/public/pages>' '    Options -Indexes' '    AllowOverride FileInfo Options Indexes' '    Require all granted' '</Directory>' > /etc/apache2/conf-available/cake-shop-pages-indexes.conf && \
     a2enconf cake-shop-allowoverride cake-shop-pages-indexes
 
 # Create .htaccess for URL routing

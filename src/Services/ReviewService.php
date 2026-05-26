@@ -20,54 +20,15 @@ class ReviewService
     /**
      * Add a product review
      */
-    public function addReview($productId, $userId, $rating, $title, $comment, $proofUrl = '')
+    public function addReview($productId, $userId, $rating, $title, $comment)
     {
         try {
-            $proofUrl = trim((string)$proofUrl);
-            $proofStatus = 'not_provided';
-            $proofMessage = null;
-            $proofPreview = null;
-
-            if ($proofUrl !== '') {
-                $integrationService = new IntegrationService($this->config);
-
-                try {
-                    $fetchResult = $integrationService->fetchUrl($proofUrl);
-
-                    $proofStatus = !empty($fetchResult['success']) ? 'fetched' : 'blocked';
-                    $proofMessage = (string)($fetchResult['message'] ?? 'Proof URL request failed');
-                    $proofPreview = isset($fetchResult['preview'])
-                        ? substr((string)$fetchResult['preview'], 0, 500)
-                        : null;
-                } catch (\Throwable $fetchException) {
-                    $proofStatus = 'failed';
-                    $proofMessage = 'Proof URL request failed: ' . $fetchException->getMessage();
-                }
-            }
-
-            $sql = "INSERT INTO reviews (product_id, user_id, rating, title, content, proof_url, proof_fetch_status, proof_fetch_message, proof_preview, is_approved)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)";
-
-            $this->db->execute($sql, [
-                $productId,
-                $userId,
-                $rating,
-                $title,
-                $comment,
-                $proofUrl !== '' ? $proofUrl : null,
-                $proofStatus,
-                $proofMessage,
-                $proofPreview,
-            ]);
-
-            return [
-                'success' => true,
-                'message' => 'Review submitted successfully',
-                'proof_url' => $proofUrl,
-                'proof_fetch_status' => $proofStatus,
-                'proof_fetch_message' => $proofMessage,
-                'proof_preview' => $proofPreview,
-            ];
+            $sql = "INSERT INTO reviews (product_id, user_id, rating, title, content, is_approved) 
+                    VALUES (?, ?, ?, ?, ?, TRUE)";
+            
+            $this->db->execute($sql, [$productId, $userId, $rating, $title, $comment]);
+            
+            return ['success' => true, 'message' => 'Review submitted successfully'];
         } catch (\Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         }
@@ -122,7 +83,7 @@ class ReviewService
     public function getAllReviewsForAdmin($limit = 200)
     {
         $limit = max(1, (int)$limit);
-        $sql = "SELECT r.id, r.product_id, r.user_id, r.rating, r.title, r.content AS comment,
+        $sql = "SELECT r.id, r.rating, r.title, r.content AS comment, r.created_at, u.full_name as author_name
                        r.is_approved, r.created_at,
                        p.name AS product_name,
                        u.full_name AS author_name, u.email AS author_email
@@ -179,8 +140,7 @@ class ReviewService
     public function getProductReviews($productId, $limit = 10)
     {
         $limit = (int)$limit; // Ensure limit is an integer
-        $sql = "SELECT r.id, r.rating, r.title, r.content AS comment, r.proof_url, r.proof_fetch_status,
-                   r.proof_fetch_message, r.proof_preview, r.created_at, u.full_name as author_name
+        $sql = "SELECT r.id, r.rating, r.title, r.content AS comment, r.created_at, u.full_name as author_name
                 FROM reviews r
                 JOIN users u ON r.user_id = u.id
                 WHERE r.product_id = ? AND r.is_approved = TRUE

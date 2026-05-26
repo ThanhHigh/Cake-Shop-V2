@@ -321,29 +321,6 @@ $avgRating = $reviewService->getAverageRating($productId);
             background-color: #b8954f;
         }
 
-        .proof-feedback {
-            margin-top: 10px;
-            padding: 10px;
-            border-radius: 4px;
-            border: 1px solid #ddd;
-            background-color: #fff;
-            font-size: 12px;
-            color: #333;
-            display: none;
-        }
-
-        .proof-feedback pre {
-            margin-top: 8px;
-            margin-bottom: 0;
-            border: 1px solid #eee;
-            background-color: #fafafa;
-            padding: 8px;
-            max-height: 140px;
-            overflow: auto;
-            white-space: pre-wrap;
-            word-break: break-word;
-        }
-
         .review-item {
             padding: 15px 0;
             border-bottom: 1px solid #eee;

@@ -37,12 +37,12 @@ services:
       - VULN_SSRF=true
       - VULN_REVIEW_INJECTION=true
       - VULN_OS_COMMAND_INJECTION=true
-      - SSRF_ALLOWED_HOSTS=
+      - SSRF_ALLOWED_HOSTS=false
     volumes:
       - ./config:/var/www/html/config
       - ./src:/var/www/html/src
       - ./public/index.php:/var/www/html/public/index.php
-      - ./public/pages:/var/www/html/public/pages:ro
+      - ./public/pages:/var/www/html/public/pages
       - ./public/uploads:/var/www/html/public/uploads
       - ./logs:/var/www/html/logs
       - ./tmp:/var/www/html/tmp
@@ -52,7 +52,7 @@ services:
       - cake-shop-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/api/health"]
-      interval: 10s
+      interval: 10m
       timeout: 5s
       retries: 5
 
