@@ -55,11 +55,11 @@ mysql -u root -p < database/schema.sql
 cd public && php -S localhost:8000
 ```
 
-### Composer Commands
+### PHP Commands
 ```bash
-composer run server            # Start dev server on http://localhost:8000
-composer run test              # Run PHPUnit tests
-composer run lint              # Check PHP CodeSniffer standards
+php -S localhost:8000 -t public/  # Start dev server on http://localhost:8000
+phpunit                           # Run PHPUnit tests
+phpcs src/                        # Check PHP CodeSniffer standards
 ```
 
 ### Health Check
@@ -96,7 +96,7 @@ After login, `$_SESSION` contains: `user_id`, `user_email`, `user_role` (`'custo
 ### Page Structure
 All pages in `public/pages/` follow this pattern:
 ```php
-require_once dirname(dirname(__DIR__)) . '/vendor/autoload.php';
+require_once dirname(dirname(__DIR__)) . '/autoload.php';
 $config = require_once dirname(dirname(__DIR__)) . '/config/config.php';
 // Services instantiated with $config passed
 ?><!DOCTYPE html>

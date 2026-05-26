@@ -1,8 +1,5 @@
 FROM php:7.4-apache
 
-# Install Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
 # Enable necessary PHP extensions
 RUN docker-php-ext-install pdo pdo_mysql json
 
@@ -14,9 +11,6 @@ WORKDIR /var/www/html
 
 # Copy application code
 COPY . .
-
-# Install PHP dependencies with Composer
-RUN composer install --no-dev --optimize-autoloader
 
 # Create necessary directories
 RUN mkdir -p /var/www/html/public/uploads

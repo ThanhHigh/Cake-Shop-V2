@@ -225,7 +225,7 @@ All pages in `public/pages/` follow this structure:
 ```php
 <?php
 // 1. Include autoloader and config
-require_once dirname(dirname(__DIR__)) . '/vendor/autoload.php';
+require_once dirname(dirname(__DIR__)) . '/autoload.php';
 $config = require_once dirname(dirname(__DIR__)) . '/config/config.php';
 
 // 2. Instantiate services

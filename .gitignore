@@ -8,7 +8,6 @@
 # Dependencies
 vendor/
 node_modules/
-composer.lock
 
 # IDE
 .vscode/

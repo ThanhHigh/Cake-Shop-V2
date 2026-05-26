@@ -4,7 +4,7 @@
  */
 
 if (!function_exists('__autoload')) {
-    require_once dirname(__DIR__, 3) . '/vendor/autoload.php';
+    require_once dirname(__DIR__, 3) . '/autoload.php';
 }
 
 if (!isset($config)) {

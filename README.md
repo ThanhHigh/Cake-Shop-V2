@@ -9,7 +9,7 @@ Vulnerable mode learner guide: [docs/VULNERABLE_MODE_README.md](docs/VULNERABLE_
 ### Prerequisites
 - PHP 7.4+
 - MySQL 5.7+
-- Composer (optional, for dependencies)
+- PHPUnit and PHPCS available locally or in container
 
 ### Setup
 
@@ -150,9 +150,8 @@ Training extension included:
 ## 📖 Running Tests
 
 ```bash
-composer install     # Install dev dependencies
-composer test        # Run phpunit tests
-composer lint        # Check code style
+phpunit              # Run phpunit tests
+phpcs src/           # Check code style
 ```
 
 ## 🛠️ Development

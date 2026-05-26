@@ -10,8 +10,8 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// Load Composer autoloader for PSR-4 namespace support
-require_once dirname(__DIR__) . '/vendor/autoload.php';
+// Load local autoloader for PSR-4 namespace support
+require_once dirname(__DIR__) . '/autoload.php';
 
 // Load configuration
 $config = require_once dirname(__DIR__) . '/config/config.php';

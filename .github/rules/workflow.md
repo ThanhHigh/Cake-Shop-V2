@@ -19,16 +19,16 @@ docker exec cake_shop_db mysql -u root -proot cake_shop < database/schema.sql
 # MySQL on localhost:3306
 ```
 
-### Docker Services
+phpcs src/
 
 | Service | Port | Purpose |
-|---------|------|---------|
+phpcs src/Services/ProductService.php
 | `cake_shop_web` | 8080 | PHP 7.4-Apache web server |
 | `cake_shop_db` | 3306 | MySQL 5.7 database |
-
+phpcbf src/
 **Stop Services**:
 ```bash
-docker-compose down
+phpcs --standard=PSR2 src/
 ```
 
 ## Quick Start: Manual (Local PHP)
@@ -38,8 +38,9 @@ docker-compose down
 # On macOS: brew install php@7.4 mysql
 # On Ubuntu: sudo apt install php7.4 mysql-server
 
-# 2. Install Composer dependencies
-composer install
+# 2. Ensure PHP tooling available
+phpunit --version
+phpcs --version
 
 # 3. Create environment file
 cp .env.example .env
@@ -54,37 +55,37 @@ php -S localhost:8000
 # 6. Visit http://localhost:8000
 ```
 
-## Composer Commands
+## PHP Commands
 
 Run from project root directory:
 
 ```bash
-# Start development server with auto-reload
-composer run server
+# Start development server
+php -S localhost:8000 -t public/
 
 # Run all PHPUnit tests
-composer run test
+phpunit
 
 # Run tests with verbose output
-composer run test -- --verbose
+phpunit --verbose
 
 # Run specific test file
-composer run test -- tests/Services/ProductServiceTest.php
+phpunit tests/Services/ProductServiceTest.php
 
 # Run specific test method
-composer run test -- --filter=testSQLInjectionVulnerableMode
+phpunit --filter=testSQLInjectionVulnerableMode
 
 # Check PHP code standards (PSR-2/PSR-12)
-composer run lint
+phpcs src/
 
 # Automatically fix code style issues
-composer run fix-styles
+phpcbf src/
 
 # Stop on first failure
-composer run test -- --stop-on-failure
+phpunit --stop-on-failure
 
 # Generate code coverage report
-composer run test -- --coverage-html coverage/
+phpunit --coverage-html coverage/
 ```
 
 ## Testing
@@ -170,26 +171,26 @@ class ProductServiceTest extends TestCase
 
 ```bash
 # Check all code for PSR-2/PSR-12 standards
-composer run lint
+phpcs src/
 
 # Check specific file
-vendor/bin/phpcs src/Services/ProductService.php
+phpcs src/Services/ProductService.php
 
 # Try automatic fixes
-composer run fix-styles
+phpcbf src/
 
 # Show specific standard
-vendor/bin/phpcs --standard=PSR2 src/
+phpcs --standard=PSR2 src/
 
 # Show which files have issues (without details)
-vendor/bin/phpcs --report=summary src/
+phpcs --report=summary src/
 ```
 
 ### Common Issues & Fixes
 
 | Issue | Command |
 |-------|---------|
-| Tabs vs spaces | `composer run fix-styles` |
+| Tabs vs spaces | `phpcbf src/` |
 | Line too long | Manual reformat to <100 chars |
 | Missing docblock | Add PHPDoc comment |
 | Incorrect naming | Rename per conventions |
@@ -263,8 +264,8 @@ SELECT * FROM users;
 
 ### Pre-Deployment Verification
 
-- [ ] All tests passing: `composer run test`
-- [ ] Code standards clean: `composer run lint`
+- [ ] All tests passing: `phpunit`
+- [ ] Code standards clean: `phpcs src/`
 - [ ] `APP_MODE` = `'secure'` in `.env`
 - [ ] `DB_HOST` = `localhost` or `127.0.0.1` (enforced)
 - [ ] `APP_URL` contains `localhost` or `127.0.0.1` (enforced)
@@ -340,7 +341,7 @@ VULN_INTEGRITY=false               # Data verification
 |---------|----------|
 | "Port 8080 in use" | Change port in docker-compose.yml or stop conflicting service |
 | "Connection refused" | Verify MySQL running: `docker-compose ps` or `mysql -u root -p` |
-| "Class not found" | Run `composer install` to regenerate autoloader |
+| "Class not found" | Check `autoload.php` path and namespace prefix |
 | "Permission denied logs/" | `chmod 755 logs/` then `sudo chown www-data logs/` |
 | "Session not persisting" | Check `/var/lib/php/sessions` writable by web server |
 | "Tests fail" | Clear cache, check database: `mysql cake_shop < database/schema.sql` |

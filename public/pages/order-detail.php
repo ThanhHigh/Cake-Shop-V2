@@ -8,7 +8,7 @@
 
 // Ensure autoloader is loaded
 if (!function_exists('__autoload')) {
-    require_once dirname(dirname(__DIR__)) . '/vendor/autoload.php';
+    require_once dirname(dirname(__DIR__)) . '/autoload.php';
 }
 
 // Load config if not already loaded
