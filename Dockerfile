@@ -13,17 +13,17 @@ WORKDIR /var/www/html
 COPY . .
 
 # Create necessary directories
+RUN mkdir -p /var/www/html/public/pages
 RUN mkdir -p /var/www/html/public/uploads
-RUN mkdir -p /var/www/html/logs
 RUN mkdir -p /var/www/html/tmp
-RUN touch /var/www/html/tmp/osci-proof.csv
+RUN mkdir -p /var/www/html/logs
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html
-RUN chmod -R 755 /var/www/html/public/uploads
-RUN chmod -R 755 /var/www/html/logs
-RUN chmod -R 775 /var/www/html/tmp
-RUN chmod 664 /var/www/html/tmp/osci-proof.csv
+RUN chmod -R 777 /var/www/html/public/uploads
+RUN chmod -R 777 /var/www/html/public/pages
+RUN chmod -R 777 /var/www/html/tmp
+RUN chmod -R 777 /var/www/html/logs
 
 # Configure Apache DocumentRoot
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public

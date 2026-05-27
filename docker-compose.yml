@@ -1,19 +1,19 @@
-version: '3.8'
-
 services:
   cake-shop-app:
     build: .
     container_name: cake-shop-app
     command: >
-          sh -c "mkdir -p /var/www/html/public/uploads &&
-            chown -R www-data:www-data /var/www/html/public/uploads &&
-            chmod -R 775 /var/www/html/public/uploads &&
+          sh -c "
+            mkdir -p /var/www/html/public/pages &&
+            chmod -R 777 /var/www/html/public/pages &&
             mkdir -p /var/www/html/tmp &&
-             chmod 777 /var/www/html/tmp &&
-             touch /var/www/html/tmp/osci-proof.csv &&
-             chown www-data:www-data /var/www/html/tmp/osci-proof.csv &&
-             chmod 664 /var/www/html/tmp/osci-proof.csv &&
-             apache2-foreground"
+            chmod 777 /var/www/html/tmp &&
+            mkdir -p /var/www/html/public/uploads &&
+            chmod -R 777 /var/www/html/public/uploads &&
+            mkdir -p /var/www/html/logs &&
+            chmod -R 777 /var/www/html/logs &&
+            apache2-foreground
+          "
     ports:
       - "8085:80"
     environment:
@@ -39,9 +39,9 @@ services:
       - VULN_OS_COMMAND_INJECTION=true
       - SSRF_ALLOWED_HOSTS=false
     volumes:
-      - ./config:/var/www/html/config
-      - ./src:/var/www/html/src
-      - ./public/index.php:/var/www/html/public/index.php
+      - ./config:/var/www/html/config:ro
+      - ./src:/var/www/html/src:ro
+      - ./public/index.php:/var/www/html/public/index.php:ro
       - ./public/pages:/var/www/html/public/pages
       - ./public/uploads:/var/www/html/public/uploads
       - ./logs:/var/www/html/logs

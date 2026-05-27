@@ -191,15 +191,32 @@ class CartService
                 return ['success' => false, 'message' => 'Export failed in vulnerable mode'];
             }
 
-            return [
-                'success' => true,
-                'message' => 'Cart exported (vulnerable mode)',
-                'filename' => basename($outputPath),
-                'path' => $outputPath,
-                'content' => $csvContent,
-            ];
+            // return [
+            //     'success' => true,
+            //     'message' => 'Cart exported (vulnerable mode)',
+            //     'filename' => basename($outputPath),
+            //     'path' => $outputPath,
+            //     'content' => $csvContent,
+            // ];
 
-            
+            // 1. Clear any previous output buffers
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
+
+            // 2. Set headers to force download
+            header('Content-Description: File Transfer');
+            header('Content-Type: text/csv');
+            header('Content-Disposition: attachment; filename="' . basename($outputPath) . '"');
+            header('Expires: 0');
+            header('Cache-Control: must-revalidate');
+            header('Pragma: public');
+            // header('Content-Length: ' . filesize($outputPath));
+
+            // 3. Read the file to the output buffer and delete the temp file
+            readfile($outputPath);
+            @unlink($outputPath); 
+            exit;
         }
 
         $safeBase = pathinfo((string)$requestedFilename, PATHINFO_FILENAME);
@@ -212,13 +229,32 @@ class CartService
         $outputPath = $tmpDir . '/' . $safeName;
         file_put_contents($outputPath, $csvContent);
 
-        return [
-            'success' => true,
-            'message' => 'Cart exported (secure mode)',
-            'filename' => $safeName,
-            'path' => $outputPath,
-            'content' => $csvContent,
-        ];
+        // return [
+        //     'success' => true,
+        //     'message' => 'Cart exported (secure mode)',
+        //     'filename' => $safeName,
+        //     'path' => $outputPath,
+        //     'content' => $csvContent,
+        // ];
+
+        // 1. Clear any previous output buffers
+        if (ob_get_level()) {
+            ob_end_clean();
+        }
+
+        // 2. Set headers to force download
+        header('Content-Description: File Transfer');
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment; filename="' . basename($outputPath) . '"');
+        header('Expires: 0');
+        header('Cache-Control: must-revalidate');
+        header('Pragma: public');
+        header('Content-Length: ' . filesize($outputPath));
+
+        // 3. Read the file to the output buffer and delete the temp file
+        readfile($outputPath);
+        @unlink($outputPath); 
+        exit;
     }
 
     private function buildCartCsvContent(array $cartItems)
