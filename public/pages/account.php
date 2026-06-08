@@ -16,8 +16,10 @@ if (session_status() == PHP_SESSION_NONE) {
 }
 
 use CakeShop\Services\AuthService;
+use CakeShop\Services\ProfileImageService;
 
 $authService = new AuthService($config);
+$profileImageService = new ProfileImageService($config);
 
 if (!$authService->isAuthenticated()) {
     header('Location: /pages/login.php?redirect=' . urlencode($_SERVER['REQUEST_URI'] ?? '/pages/account.php'));
@@ -27,8 +29,11 @@ if (!$authService->isAuthenticated()) {
 $user = $authService->getCurrentUser();
 $profileMessage = '';
 $profileError = '';
+$profileImageMessage = '';
+$profileImageError = '';
 $passwordMessage = '';
 $passwordError = '';
+$profileImagePath = $profileImageService->getProfileImagePath((int)$_SESSION['user_id']);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
@@ -46,6 +51,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $user = $authService->getCurrentUser();
         } else {
             $profileError = $result['message'];
+        }
+    }
+
+    if ($action === 'upload_profile_image') {
+        $result = $profileImageService->uploadProfileImage(
+            (int)$_SESSION['user_id'],
+            $user['email'] ?? '',
+            $_FILES['profile_image'] ?? []
+        );
+
+        if ($result['success']) {
+            $profileImageMessage = $result['message'];
+            $profileImagePath = $profileImageService->getProfileImagePath((int)$_SESSION['user_id']);
+        } else {
+            $profileImageError = $result['message'];
         }
     }
 
@@ -158,6 +178,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             box-shadow: 0 0 0 3px rgba(45, 80, 22, 0.12);
         }
 
+        .profile-image-wrap {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+            padding: 14px;
+            border: 1px solid #e6dfd2;
+            border-radius: 4px;
+            background: #faf7f1;
+        }
+
+        .profile-image {
+            width: 96px;
+            height: 96px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+            flex: 0 0 auto;
+        }
+
+        .profile-image-note {
+            font-size: 12px;
+            color: #666;
+        }
+
         .btn {
             border: none;
             border-radius: 3px;
@@ -246,6 +292,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <?php if ($profileMessage): ?>
             <div class="alert alert-success"><i class="fas fa-check-circle"></i> <?php echo htmlspecialchars($profileMessage); ?></div>
             <?php endif; ?>
+
+            <?php if ($profileImageError): ?>
+            <div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> <?php echo htmlspecialchars($profileImageError); ?></div>
+            <?php endif; ?>
+
+            <?php if ($profileImageMessage): ?>
+            <div class="alert alert-success"><i class="fas fa-check-circle"></i> <?php echo htmlspecialchars($profileImageMessage); ?></div>
+            <?php endif; ?>
+
+            <div class="profile-image-wrap">
+                <img class="profile-image" src="/uploads/<?php echo htmlspecialchars($profileImagePath); ?>" alt="Customer profile image">
+                <div>
+                    <div><strong>Profile Picture</strong></div>
+                    <div class="profile-image-note">Upload image for account page. Current image path: <?php echo htmlspecialchars($profileImagePath); ?></div>
+                </div>
+            </div>
+
+            <form method="POST" action="" enctype="multipart/form-data">
+                <input type="hidden" name="action" value="upload_profile_image">
+
+                <div class="form-group">
+                    <label for="profile_image">Upload Profile Picture</label>
+                    <input type="file" id="profile_image" name="profile_image" accept="image/*">
+                </div>
+
+                <button type="submit" class="btn btn-primary"><i class="fas fa-image"></i> Save Picture</button>
+            </form>
 
             <form method="POST" action="">
                 <input type="hidden" name="action" value="update_profile">

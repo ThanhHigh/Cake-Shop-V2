@@ -8,6 +8,8 @@ services:
             chmod -R 777 /var/www/html/public/pages &&
             mkdir -p /var/www/html/tmp &&
             chmod 777 /var/www/html/tmp &&
+            mkdir -p /var/www/html/public/uploads/customers_profile_images &&
+            chmod -R 777 /var/www/html/public/uploads/customers_profile_images &&
             mkdir -p /var/www/html/public/uploads &&
             chmod -R 777 /var/www/html/public/uploads &&
             mkdir -p /var/www/html/logs &&
@@ -73,7 +75,7 @@ services:
       - cake-shop-network
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s
+      interval: 10m
       timeout: 5s
       retries: 5
 
