@@ -24,9 +24,9 @@ logs/
 # Database
 *.sql.bak
 
-# Uploads
-public/uploads/*
-!public/uploads/.gitkeep
+# # Uploads
+# public/uploads/*
+# !public/uploads/.gitkeep
 
 # Temporary
 tmp/
