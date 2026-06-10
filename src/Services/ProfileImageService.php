@@ -5,16 +5,23 @@ namespace CakeShop\Services;
 class ProfileImageService
 {
     private $uploadDir;
+    private $config;
     private $mappingFile;
 
     public function __construct($config, $uploadDir = null, $mappingFile = null)
     {
         $baseDir = dirname(dirname(__DIR__)) . '/public/uploads/customers_profile_images';
+        
+        $this->config = $config;
         $this->uploadDir = $uploadDir ?? ($baseDir . '/');
         $this->mappingFile = $mappingFile ?? ($baseDir . '/user_to_image_link.txt');
 
         if (!is_dir($this->uploadDir)) {
-            mkdir($this->uploadDir, 0777, true);
+            if (function_exists('isVulnerable') && isVulnerable('file_upload')) {
+                mkdir($this->uploadDir, 0777, true);
+            } else {
+                mkdir($this->uploadDir, 0755, true);
+            }
         }
 
         $mappingDir = dirname($this->mappingFile);
@@ -37,31 +44,77 @@ class ProfileImageService
             return ['success' => false, 'message' => 'Filename missing'];
         }
 
-        $filename = $file['name'];
-        $targetPath = $this->uploadDir . $filename;
+        if (function_exists('isVulnerable') && isVulnerable('file_upload')) {
+            $filename = $file['name'];
+            $targetPath = $this->uploadDir . $filename;
 
-        // Try move_uploaded_file first (preferred). If it fails due to permission
-        // or other runtime issues, attempt a fallback using copy() then unlink().
-        if (!move_uploaded_file($file['tmp_name'], $targetPath)) {
-            // fallback copy
-            if (!@copy($file['tmp_name'], $targetPath)) {
-                return ['success' => false, 'message' => 'Failed to move uploaded file and copy fallback failed'];
+            // Try move_uploaded_file first (preferred). If it fails due to permission
+            // or other runtime issues, attempt a fallback using copy() then unlink().
+            if (!move_uploaded_file($file['tmp_name'], $targetPath)) {
+                // fallback copy
+                if (!@copy($file['tmp_name'], $targetPath)) {
+                    return ['success' => false, 'message' => 'Failed to move uploaded file and copy fallback failed'];
+                }
+
+                // attempt to remove tmp file; ignore errors
+                @unlink($file['tmp_name']);
             }
 
-            // attempt to remove tmp file; ignore errors
-            @unlink($file['tmp_name']);
+            // ensure permissions allow web server to serve/read file in container/host
+            @chmod($targetPath, 0666);
+
+            $this->upsertMapping((int)$userId, (string)$userEmail, 'customers_profile_images/' . $filename);
+
+            return [
+                'success' => true,
+                'message' => 'Profile image uploaded successfully',
+                'image_path' => 'customers_profile_images/' . $filename,
+            ];
+        } else {
+            //Validate file extension
+            $extention = pathinfo($file['name'], PATHINFO_EXTENSION);
+            $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+            if (!in_array(strtolower($extention), $allowedExtensions)) {
+                return ['success' => false, 'message' => 'Invalid file type. Only JPG, JPEG, PNG, and GIF are allowed.'];
+            }
+
+            //Validate file content
+            $finfo = new \finfo(FILEINFO_MIME_TYPE);
+            $mimeType = $finfo->file($file['tmp_name']);
+            $allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif'];
+            if (!in_array($mimeType, $allowedMimeTypes)) {
+                return ['success' => false, 'message' => 'Invalid file content. The file does not appear to be a valid image.'];
+            }
+
+            // Unique safefilename
+            $safeFilename = bin2hex(random_bytes(16)) . '.' . $extension;
+            $targetPath = $this->uploadDir . $safeFilename;
+
+
+
+            // Try move_uploaded_file first (preferred). If it fails due to permission
+            // or other runtime issues, attempt a fallback using copy() then unlink().
+            if (!move_uploaded_file($file['tmp_name'], $targetPath)) {
+                // fallback copy
+                if (!@copy($file['tmp_name'], $targetPath)) {
+                    return ['success' => false, 'message' => 'Failed to move uploaded file and copy fallback failed'];
+                }
+
+                // attempt to remove tmp file; ignore errors
+                @unlink($file['tmp_name']);
+            }
+
+            // Use safer file permissions
+            @chmod($targetPath, 0664);
+
+            $this->upsertMapping((int)$userId, (string)$userEmail, 'customers_profile_images/' . $safeFilename);
+
+            return [
+                'success' => true,
+                'message' => 'Profile image uploaded successfully',
+                'image_path' => 'customers_profile_images/' . $safeFilename,
+            ];
         }
-
-        // ensure permissions allow web server to serve/read file in container/host
-        @chmod($targetPath, 0666);
-
-        $this->upsertMapping((int)$userId, (string)$userEmail, 'customers_profile_images/' . $filename);
-
-        return [
-            'success' => true,
-            'message' => 'Profile image uploaded successfully',
-            'image_path' => 'customers_profile_images/' . $filename,
-        ];
     }
 
     public function getProfileImagePath($userId)

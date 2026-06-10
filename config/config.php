@@ -117,6 +117,7 @@ $config = [
         'logging_failures' => (getenv('VULN_LOGGING_FAILURES') === 'true'),
         'ssrf' => (getenv('VULN_SSRF') === 'true'),
         'review_injection' => (getenv('VULN_REVIEW_INJECTION') === 'true'),
+        'file_upload' => (getenv('VULN_FILE_UPLOAD') === 'false'),
     ],
 ];
 
