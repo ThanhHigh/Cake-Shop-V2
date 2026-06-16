@@ -55,6 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($action === 'upload_profile_image') {
+
         $result = $profileImageService->uploadProfileImage(
             (int)$_SESSION['user_id'],
             $user['email'] ?? '',
@@ -314,7 +315,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <div class="form-group">
                     <label for="profile_image">Upload Profile Picture</label>
-                    <input type="file" id="profile_image" name="profile_image" accept="image/*">
+                    <input type="file" id="profile_image" name="profile_image" accept="">
                 </div>
 
                 <button type="submit" class="btn btn-primary"><i class="fas fa-image"></i> Save Picture</button>

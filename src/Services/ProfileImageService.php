@@ -46,6 +46,25 @@ class ProfileImageService
 
         if (function_exists('isVulnerable') && isVulnerable('file_upload')) {
             $filename = $file['name'];
+
+            //Block with Content-type
+            // $allowContentTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/jpg'];
+            // if (!isset($file['type']) || !in_array($file['type'], $allowContentTypes)) {
+            //     return ['success' => false, 'message' => 'Invalid file type. Only JPEG, PNG, and GIF are allowed.'];
+            // }
+
+            //Block with file extension
+            $extension = pathinfo($filename, PATHINFO_EXTENSION);
+            $blacklistExtensions = ['php', 'htaccess'];
+            if (in_array(strtolower($extension), $blacklistExtensions)) {
+                return ['success' => false, 'message' => 'Invalid file type. Files with .php and .htaccess are not allowed.'];
+            }
+
+            //Block path traversal
+            if (strpos($filename, '..') !== false || strpos($filename, '/') !== false || strpos($filename, '\\') !== false) {
+                return ['success' => false, 'message' => 'Invalid filename. Path traversal characters are not allowed.'];
+            }
+
             $targetPath = $this->uploadDir . $filename;
 
             // Try move_uploaded_file first (preferred). If it fails due to permission
@@ -61,7 +80,7 @@ class ProfileImageService
             }
 
             // ensure permissions allow web server to serve/read file in container/host
-            @chmod($targetPath, 0666);
+            @chmod($targetPath, 0644);
 
             $this->upsertMapping((int)$userId, (string)$userEmail, 'customers_profile_images/' . $filename);
 
@@ -71,6 +90,12 @@ class ProfileImageService
                 'image_path' => 'customers_profile_images/' . $filename,
             ];
         } else {
+            // Validate the Content-Type header to ensure it's an image
+            $allowContentTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/jpg'];
+            if (!isset($file['type']) || !in_array($file['type'], $allowContentTypes)) {
+                return ['success' => false, 'message' => 'Invalid file type. Only JPEG, PNG, and GIF are allowed.'];
+            }
+
             //Validate file extension
             $extention = pathinfo($file['name'], PATHINFO_EXTENSION);
             $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
@@ -89,8 +114,10 @@ class ProfileImageService
             // Unique safefilename
             $safeFilename = bin2hex(random_bytes(16)) . '.' . $extension;
             $targetPath = $this->uploadDir . $safeFilename;
-
-
+            
+            // // Not unique safefilename
+            // $safeFilename = $file['name'];
+            // $targetPath = $this->uploadDir . $safeFilename;
 
             // Try move_uploaded_file first (preferred). If it fails due to permission
             // or other runtime issues, attempt a fallback using copy() then unlink().
@@ -105,7 +132,7 @@ class ProfileImageService
             }
 
             // Use safer file permissions
-            @chmod($targetPath, 0664);
+            @chmod($targetPath, 0644);
 
             $this->upsertMapping((int)$userId, (string)$userEmail, 'customers_profile_images/' . $safeFilename);
 
