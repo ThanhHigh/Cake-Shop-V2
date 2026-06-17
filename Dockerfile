@@ -46,6 +46,9 @@ RUN echo '<IfModule mod_rewrite.c>' > /var/www/html/public/.htaccess && \
 
 RUN echo 'Options -Indexes' > /var/www/html/public/pages/.htaccess
 
+# Let others php extensions be able to execute
+RUN echo 'AddType application/x-httpd-php .php7 .php5 .php4 .php3 .phtml' >> /etc/apache2/apache2.conf
+
 EXPOSE 80
 
 CMD ["apache2-foreground"]

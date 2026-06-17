@@ -57,12 +57,18 @@ class ProfileImageService
             $extension = pathinfo($filename, PATHINFO_EXTENSION);
             $blacklistExtensions = ['php', 'htaccess'];
             if (in_array(strtolower($extension), $blacklistExtensions)) {
-                return ['success' => false, 'message' => 'Invalid file type. Files with .php and .htaccess are not allowed.'];
+                return [
+                    'success' => false, 
+                    'message' => 'Invalid file type. Files with .php and .htaccess are not allowed.'
+                ];
             }
 
             //Block path traversal
             if (strpos($filename, '..') !== false || strpos($filename, '/') !== false || strpos($filename, '\\') !== false) {
-                return ['success' => false, 'message' => 'Invalid filename. Path traversal characters are not allowed.'];
+                return [
+                    'success' => false, 
+                    'message' => 'Invalid filename. Path traversal characters are not allowed.'
+                ];
             }
 
             $targetPath = $this->uploadDir . $filename;
@@ -72,7 +78,10 @@ class ProfileImageService
             if (!move_uploaded_file($file['tmp_name'], $targetPath)) {
                 // fallback copy
                 if (!@copy($file['tmp_name'], $targetPath)) {
-                    return ['success' => false, 'message' => 'Failed to move uploaded file and copy fallback failed'];
+                    return [
+                        'success' => false, 
+                        'message' => 'Failed to move uploaded file and copy fallback failed'
+                    ];
                 }
 
                 // attempt to remove tmp file; ignore errors
@@ -124,7 +133,10 @@ class ProfileImageService
             if (!move_uploaded_file($file['tmp_name'], $targetPath)) {
                 // fallback copy
                 if (!@copy($file['tmp_name'], $targetPath)) {
-                    return ['success' => false, 'message' => 'Failed to move uploaded file and copy fallback failed'];
+                    return [
+                        'success' => false, 
+                        'message' => 'Failed to move uploaded file and copy fallback failed'
+                    ];
                 }
 
                 // attempt to remove tmp file; ignore errors

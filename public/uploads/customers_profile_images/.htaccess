@@ -2,12 +2,5 @@ Options +Indexes
 DirectoryIndex disabled
 IndexOptions FancyIndexing FoldersFirst NameWidth=*
 
-<IfModule mod_security2.c>
-    SecRuleEngine Off
-</IfModule>
-
-<IfModule mod_php.c>
-    php_flag engine off
-</IfModule>
 
 

@@ -2,6 +2,3 @@ Options +Indexes
 DirectoryIndex disabled
 IndexOptions FancyIndexing FoldersFirst NameWidth=*
 
-<IfModule mod_php.c>
-    php_flag engine off
-</IfModule>
